@@ -30,9 +30,10 @@ AVIF生成器是一个简单的Web应用，可以帮助用户将图像文件转�
 ## 安装和部署
 
 1. 克隆代码库：`git clone https://github.com/username/avif-generator.git`
-2. 安装依赖包：`pip install Flask`
-3. 安装ffmpeg并添加到环境变量：[https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z)
-4. 启动后端服务器：`python app.py`
-5. 在浏览器中打开应用：`http://localhost:5000`
+   或者直接下载app.py和templates文件夹到本地
+3. 安装依赖包：`pip install Flask`
+4. 安装ffmpeg并添加到环境变量：[https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z)
+5. 启动后端服务器：`python app.py`
+6. 在浏览器中打开应用：`http://localhost:5000`
 
 
