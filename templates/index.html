@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AVIF生成器</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+  <style>
+    #preview {
+      margin: 20px 0;
+    }
+    video, img {
+      max-width: 600px;
+      max-height: 600px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="container">
+      <el-card class="box-card">
+        <template #header>
+          <div class="card-header">
+            <span>AVIF生成器</span>
+          </div>
+        </template>
+        <el-form id="upload-form">
+          <el-form-item>
+            <el-upload
+              ref="upload"
+              :on-change="handleFileChange"
+              :auto-upload="false"
+            >
+              <el-button type="primary" size="default">选择文件</el-button>
+            </el-upload>
+          </el-form-item>
+          <div id="preview"></div>
+          <el-form-item>
+            <el-button type="primary" size="default" :disabled="!file" @click="handleSubmit">上传文件</el-button>
+          </el-form-item>
+        </el-form>
+        <el-button id="download-btn" type="success" size="default" :disabled="!downloadUrl" @click="handleDownload">下载.avif</el-button>
+        <el-dialog
+          v-model="uploading"
+          title="正在处理，请稍等..."
+          width="30%"
+        >
+          <!-- <span>Processing...</span> -->
+          <template #footer>
+            <span class="dialog-footer">
+              <el-button @click="uploading = false" type="danger">取消</el-button>
+            </span>
+          </template>
+        </el-dialog>
+      </el-card>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3"></script>
+  <script src="https://unpkg.com/element-plus"></script>
+  <script src="https://unpkg.com/axios@0.27.2/dist/axios.min.js"></script>
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          file: null,
+          uploading: false,
+          downloadUrl: null,
+          fileBlob: null,
+          filename: null
+        }
+      },
+      methods: {
+        handleFileChange(file) {
+          this.file = file.raw;
+          const url = URL.createObjectURL(this.file);
+          this.$refs.upload.clearFiles();
+
+          if (this.file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = url;
+            document.getElementById('preview').innerHTML = '';
+            document.getElementById('preview').appendChild(img);
+          } else if (this.file.type.startsWith('video/')) {
+            const video = document.createElement('video');
+            video.src = url;
+            video.controls = true;
+            document.getElementById('preview').innerHTML = '';
+            document.getElementById('preview').appendChild(video);
+          }
+        },
+        handleSubmit() {
+          this.uploading = true;
+          const formData = new FormData();
+          formData.append('file', this.file);
+          axios.post('/upload', formData)
+            .then(response => {
+              if (response.data.success) {
+                const url = response.data.file_url;
+                this.filename = response.data.filename; // 获取服务器返回的文件名
+                axios.get(url, { responseType: 'blob' })
+                  .then(response => {
+                    const file = response.data;
+                    this.fileBlob = file;
+                    const url = URL.createObjectURL(file);
+                    const img = document.createElement('img');
+                    img.src = url;
+                    document.getElementById('preview').innerHTML = '';
+                    document.getElementById('preview').appendChild(img);
+                    this.downloadUrl = url;
+                    this.uploading = false;
+                  })
+                  .catch(error => {
+                    console.error(error);
+                    this.uploading = false;
+                  });
+              } else {
+                this.$message.error('Error compressing file');
+                this.uploading = false;
+              }
+            })
+            .catch(error => {
+              this.$message.error('Error uploading file');
+              this.uploading = false;
+            })
+        },
+        handleDownload() {
+          const a = document.createElement('a');
+          a.href = this.downloadUrl;
+          a.download = this.filename; // 使用服务器返回的文件名
+          a.click();
+        }
+      }
+    }).use(ElementPlus)
+
+    setTimeout(() => {
+      app.mount('#app')
+    }, 100)
+  </script>
+</body>
+</html>
